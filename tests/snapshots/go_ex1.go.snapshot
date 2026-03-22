@@ -1,0 +1,3 @@
+project/user.go
+-struct User:
+--def GetName(): ...
