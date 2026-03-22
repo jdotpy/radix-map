@@ -50,3 +50,14 @@ Example output:
     └── ƒ scan(self, target: str)
 ```
 
+## Supported Languages
+
+
+| Language | Status | Package Requirement |
+|---|---|---|
+| Python	| ✅ functions & classes | tree-sitter-python | 
+| Go	| 🚧 | tree-sitter-go | 
+| JavaScript | 🚧 | tree-sitter-javascript | 
+
+```
+

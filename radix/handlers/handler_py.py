@@ -65,8 +65,8 @@ class PythonSourceFile(SourceFile):
                     # Create the Function object for the method
                     method = Function(name=method_name, arguments=params)
                     
-                    # Check for @calls if Tier 3 is active
-                    # method.calls = self._extract_calls(child)
+                    if include_calls:
+                        method.calls = self._extract_calls(child)
                     
                     defn.methods.append(method)
             

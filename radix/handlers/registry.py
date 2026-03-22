@@ -3,29 +3,46 @@ from .base import SourceFile
 
 import sys
 
+def _load_python():
+    from .handler_py import PythonSourceFile
+    return PythonSourceFile
+
+def _load_go():
+    from .handler_go import GoSourceFile
+    return GoSourceFile
+
+def _load_js():
+    from .handler_js import JsSourceFile
+    return JsSourceFile
+
 class HandlerRegistry:
+    LIBRARIES = {
+            "py": {
+                'package_name': 'tree-sitter-python',
+                'lib': 'tree_sitter_python',
+                'loader': _load_python,
+            },
+            "go": {
+                'package_name': 'tree-sitter-go',
+                'lib': 'tree_sitter_go',
+                'loader': _load_go,
+            },
+            "js": {
+                'package_name': 'tree-sitter-javascript',
+                'lib': 'tree_sitter_javascript',
+                'loader': _load_js,
+            },
+    }
+
     def __init__(self):
         # Maps extension -> A function that returns the Class
         self._loaders = {
-            ".py": self._load_python,
-            ".go": self._load_go,
-            ".js": self._load_js,
-            ".vue": self._load_js, # Pointing to JS for now
+            ".py": LIBRARIES['py']['loader'],
+            ".go": LIBRARIES['go']['loader'],
+            ".js": LIBRARIES['js']['loader'],
         }
         self._handlers: Dict[str, Type[SourceFile]] = {}
         self._errors = {}
-
-    def _load_python(self):
-        from .handler_py import PythonSourceFile
-        return PythonSourceFile
-
-    def _load_go(self):
-        from .handler_go import GoSourceFile
-        return GoSourceFile
-
-    def _load_js(self):
-        from .handler_js import JsSourceFile
-        return JsSourceFile
 
     def get_handler_class(self, extension: str) -> Type[SourceFile]:
         ext = extension.lower()

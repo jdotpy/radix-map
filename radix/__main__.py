@@ -7,6 +7,10 @@ def create_parser():
     parser = argparse.ArgumentParser(prog="radix", description="Codebase Mapping Tool")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
+
+    # 'registry' subcommand
+    registry_parser = subparsers.add_parser("registry", help="Show registered file handlers and their libraries")
+
     # 'map' subcommand
     map_parser = subparsers.add_parser("map", help="Generate a structural map of the codebase")
     
@@ -22,6 +26,9 @@ def create_parser():
     # Configuration
     map_parser.add_argument("--max-size", type=int, default=200000, 
                             help="Skip files larger than this size in bytes")
+
+
+
     return parser
 
 
@@ -31,6 +38,8 @@ def entrypoint():
 
     if args.command == "map":
         cli.cli_map(args)
+    elif args.command == "registry":
+        cli.cli_registry(args)
     else:
         parser.print_help()
 
