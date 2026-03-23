@@ -1,6 +1,7 @@
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser
 from .base import SourceFile, Function, Variable, Definition
+from .tree_utils import ts_get_captures, one, q
 
 
 def extract_decorated_function(node):
@@ -18,21 +19,23 @@ class PythonSourceFile(SourceFile):
         return self.parser.parse(self.code)
 
     def _get_text(self, node):
+        if node is None:
+            return ''
         return self.code[node.start_byte:node.end_byte].decode('utf-8')
 
     def iter_functions(self, include_calls=False) -> list[Function]:
-        query = self.lang.query("""
+        query = q(self.lang, """
             (module (function_definition 
                 name: (identifier) @name
                 parameters: (parameters) @params) @func)
         """)
         functions = []
-        captures = query.captures(self._tree.root_node)
-        for func_node in captures.get('func', []):
-            name_node = func_node.child_by_field_name("name")
-            param_node = func_node.child_by_field_name("parameters")
+        for _, captures in ts_get_captures(query, self._tree.root_node):
+            func_node = one(captures.get('func'))
+            name_node = one(captures.get("name"))
+            param_node = one(captures.get("params"))
             
-            if name_node and param_node:
+            if name_node:
                 name = self._get_text(name_node)
                 params = self._get_text(param_node).strip("()")
                 
@@ -45,17 +48,15 @@ class PythonSourceFile(SourceFile):
 
     def iter_definitions(self, include_methods=False, include_calls=False) -> list[Definition]:
         # Query for the class and its internal methods
-        query = self.lang.query("""
+        query = q(self.lang, """
             (class_definition 
                 name: (identifier) @name
                 body: (block) @body) @class
         """)
-        
-        captures = query.captures(self._tree.root_node)
         definitions = []
-
-        for class_node in captures.get('class', []):
-            class_name = self._get_text(class_node.child_by_field_name("name"))
+        for _, captures in ts_get_captures(query, self._tree.root_node):
+            class_name = self._get_text(captures.get('name')[0])
+            body_node = captures.get('body')[0]
             
             # Initialize the Definition
             defn = Definition(name=class_name, kind="class")
@@ -63,7 +64,6 @@ class PythonSourceFile(SourceFile):
             if not include_methods:
                 continue
             # Walk the class body to find function_definitions (Methods)
-            body_node = class_node.child_by_field_name("body")
             for child in body_node.children:
                 entry = child
                 if entry.type == "decorated_definition":

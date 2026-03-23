@@ -1,6 +1,7 @@
 from .base import Variable, Function, Definition, SourceFile
 from tree_sitter import Language, Parser
 import tree_sitter_javascript as tsjavascript
+from .tree_utils import ts_get_captures, one, q
 
 def get_child_by_type(node, node_type):
     for child in node.children:
@@ -17,6 +18,8 @@ class JsSourceFile(SourceFile):
         return self._tree
 
     def _get_text(self, node):
+        if node is None:
+            return ''
         return self.code[node.start_byte:node.end_byte].decode('utf-8')
 
     def iter_functions(self, include_calls=False) -> list[Function]:
@@ -60,7 +63,7 @@ class JsSourceFile(SourceFile):
 
 
         """
-        query = self.lang.query("""
+        query = q(self.lang, """
             (program [
                 ;; 1. Standard or Exported Declaration
                 (function_declaration 
@@ -84,12 +87,11 @@ class JsSourceFile(SourceFile):
             ])
         """)
         functions = []
-        matches = query.matches(self._tree.root_node)
-        for match_id, captures in matches:
+        for _, captures in ts_get_captures(query, self._tree.root_node):
             
-            name_node = captures.get('name', [None])[0]
-            param_node = captures.get('params', [None])[0]
-            anchor_node = captures.get('anchor', [None])[0]
+            name_node = one(captures.get('name', [None]))
+            param_node = one(captures.get('params', [None]))
+            anchor_node = one(captures.get('anchor', [None]))
 
             if name_node and param_node:
                 name = self._get_text(name_node)
@@ -103,17 +105,17 @@ class JsSourceFile(SourceFile):
         return functions
 
     def iter_definitions(self, include_methods=False, include_calls=False) -> list[Definition]:
-        query = self.lang.query("""
+        query = q(self.lang, """
             (class_declaration 
                 name: (identifier) @name 
                 body: (class_body) @body) @class
         """)
         
         definitions = []
-        captures = query.captures(self._tree.root_node)
 
-        for class_node in captures.get('class', []):
-            class_name = self._get_text(class_node.child_by_field_name("name"))
+        for _, captures in ts_get_captures(query, self._tree.root_node):
+            name_node = one(captures.get('name'))
+            class_name = self._get_text(name_node)
             defn = Definition(name=class_name, kind="class")
             
             if not include_methods:
@@ -134,12 +136,12 @@ class JsSourceFile(SourceFile):
                     if include_calls:
                         method.calls = self._extract_calls(child)
                     defn.methods.append(method)
-            
+        
             definitions.append(defn)
         return definitions
 
     def iter_globals(self):
-        query = self.lang.query("""
+        query = q(self.lang, """
             (program [
                 (lexical_declaration (variable_declarator name: (identifier) @name))
                 (variable_declaration (variable_declarator name: (identifier) @name))

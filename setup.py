@@ -11,7 +11,7 @@ setup(
         ],
     },
     packages=['radix', 'radix.handlers'],
-    version = '0.1.0',
+    version = '0.1.2',
     description = 'Summarize code repositories quickly and (soon) with multiple verbosity levels',
     long_description=long_description,
     long_description_content_type="text/markdown",

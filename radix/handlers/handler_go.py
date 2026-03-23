@@ -2,6 +2,8 @@ from .base import Definition, Function, Variable, SourceFile
 from tree_sitter import Language, Parser
 import tree_sitter_go as tsgo
 
+from .tree_utils import ts_get_captures, one, q
+
 class GoSourceFile(SourceFile):
     lang = Language(tsgo.language())
 
@@ -10,12 +12,14 @@ class GoSourceFile(SourceFile):
         return self.parser.parse(self.code)
 
     def _get_text(self, node):
+        if node is None:
+            return ''
         return self.code[node.start_byte:node.end_byte].decode('utf-8')
 
     def iter_definitions(self, include_calls=False, include_methods=False) -> list[Definition]:
         """Returns Structs and Interfaces, populating their methods."""
         # Query for type declarations (structs and interfaces)
-        query = self.lang.query("""
+        query = q(self.lang, """
             (type_declaration
                 (type_spec
                     name: (type_identifier) @name
@@ -25,11 +29,11 @@ class GoSourceFile(SourceFile):
                     ] @type_body)) @definition
         """)
         definitions = []
-        captures = query.captures(self._tree.root_node)
         
         all_methods = self._get_all_methods()
 
-        for node in captures.get('definition', []):
+        for _, captures in ts_get_captures(query, self._tree.root_node):
+            node = one(captures.get('definition'))
             name_node = node.child_by_field_name("name") or node.named_child(0).child_by_field_name("name")
             
             if not name_node:
@@ -47,24 +51,23 @@ class GoSourceFile(SourceFile):
 
     def iter_functions(self, include_calls=False) -> list[Function]:
         """Returns top-level functions (those without receivers)."""
-        query = self.lang.query("""
+        query = q(self.lang, """
             (function_declaration
                 name: (identifier) @name
                 parameters: (parameter_list) @params) @func
         """)
         
         functions = []
-        captures = query.captures(self._tree.root_node)
-        for func_node in captures.get('func', []):
-            name = self._get_text(func_node.child_by_field_name("name"))
-            params = self._get_text(func_node.child_by_field_name("parameters")).strip("()")
+        for _, captures in ts_get_captures(query, self._tree.root_node):
+            name = self._get_text(one(captures.get('name')))
+            params = self._get_text(one(captures.get('params'))).strip("()")
             functions.append(Function(name=name, arguments=params))
                 
         return functions
 
     def iter_globals(self) -> list[Variable]:
         """Returns top-level var and const declarations."""
-        query = self.lang.query("""
+        query = q(self.lang, """
             (var_declaration
                 (var_spec name: (identifier) @name)) @var
             (const_declaration
@@ -72,12 +75,10 @@ class GoSourceFile(SourceFile):
         """)
         
         variables = []
-        captures = query.captures(self._tree.root_node)
-        # Combine results from both @var and @const
-        all_nodes = captures.get('var', []) + captures.get('const', [])
         
-        for node in all_nodes:
+        for _, captures in ts_get_captures(query, self._tree.root_node):
             # Simplification: grabbing the first identifier in the spec
+            node = captures.get('var') or captures.get('const')
             name_node = node.named_child(0).child_by_field_name("name")
             if name_node:
                 variables.append(Variable(name=self._get_text(name_node)))
@@ -86,7 +87,7 @@ class GoSourceFile(SourceFile):
 
     def _get_all_methods(self) -> list:
         """Helper to find all method_declarations and identify their receiver type."""
-        query = self.lang.query("""
+        query = q(self.lang, """
             (method_declaration
                 receiver: (parameter_list 
                     (parameter_declaration 
@@ -102,11 +103,10 @@ class GoSourceFile(SourceFile):
         """)
         
         methods = []
-        captures = query.captures(self._tree.root_node)
-        for i in range(len(captures.get('method', []))):
-            name_node = captures['name'][i]
-            recv_node = captures['recv'][i]
-            param_node = captures['params'][i]
+        for _, captures in ts_get_captures(query, self._tree.root_node):
+            name_node = one(captures.get('name'))
+            recv_node = one(captures.get('recv'))
+            param_node = one(captures.get('params'))
             
             func = Function(
                 name=self._get_text(name_node),

@@ -2,6 +2,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
+try:
+    from tree_sitter import QueryCursor
+except (ImportError, AttributeError):
+    QueryCursor = None
+
+
 @dataclass
 class Variable:
     name: str
@@ -70,3 +76,29 @@ class SourceFile(ABC):
     def iter_globals(self) -> List[Variable]:
         """Returns top-level constants and global variables."""
         pass
+
+
+def treesitter_get_captures(query, root_node):
+    """
+    A cross-version generator for tree-sitter captures.
+    """
+    # Version A: Modern API (0.21.0+) 
+    if QueryCursor is not None:
+        cursor = QueryCursor()
+        for capture_name, captures in cursor.captures(query, root_node):
+            for capture in captures:
+                yield capture_name, capture
+        return
+
+    # Version B: Intermediate/Legacy API
+    # Some versions allow query.captures(root_node) which returns a list
+    if hasattr(query, 'captures'):
+        results = query.captures(root_node)
+        print('results', results)
+        for capture_name, captures in results.items():
+            for capture in captures:
+                yield capture_name, capture
+    else:
+        raise RuntimeError("No compatible tree-sitter capture method found.")
+
+        

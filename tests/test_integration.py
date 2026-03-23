@@ -37,7 +37,7 @@ def test_report_generation(source_path, expected_path):
             virtual_path,
             virtual_path,
             handler,
-            lambda: source_code
+            lambda: source_code,
         )
     ])
 
@@ -45,4 +45,4 @@ def test_report_generation(source_path, expected_path):
     reports_by_file = analyze_project(scanner)
     display_txt(reports_by_file, test_output)
     result = test_output.getvalue()
-    assert expected_output == result, f"Snapshot comparison failed for {source_path.name}"
+    assert result == expected_output, f"Snapshot comparison failed for {source_path.name}"
