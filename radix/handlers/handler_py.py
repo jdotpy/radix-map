@@ -3,6 +3,13 @@ from tree_sitter import Language, Parser
 from .base import SourceFile, Function, Variable, Definition
 
 
+def extract_decorated_function(node):
+    for child in node.children:
+        if child.type == 'function_definition':
+            return child
+    return None
+
+
 class PythonSourceFile(SourceFile):
     lang = Language(tspython.language())
     
@@ -58,18 +65,18 @@ class PythonSourceFile(SourceFile):
             # Walk the class body to find function_definitions (Methods)
             body_node = class_node.child_by_field_name("body")
             for child in body_node.children:
-                if child.type == "function_definition":
-                    method_name = self._get_text(child.child_by_field_name("name"))
-                    params = self._get_text(child.child_by_field_name("parameters")).strip("()")
-                    
-                    # Create the Function object for the method
+                entry = child
+                if entry.type == "decorated_definition":
+                    decorated_function = extract_decorated_function(entry)
+                    if decorated_function is not None:
+                        entry = decorated_function
+                if entry.type == "function_definition":
+                    method_name = self._get_text(entry.child_by_field_name("name"))
+                    params = self._get_text(entry.child_by_field_name("parameters")).strip("()")
                     method = Function(name=method_name, arguments=params)
-                    
                     if include_calls:
-                        method.calls = self._extract_calls(child)
-                    
+                        method.calls = self._extract_calls(entry)
                     defn.methods.append(method)
-            
             definitions.append(defn)
         return definitions
       

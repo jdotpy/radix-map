@@ -1,7 +1,11 @@
 import pytest
 from pathlib import Path
-from project.handler_registry import HandlerRegistry
-from project.analyzer import ViewEngine
+from radix.core import analyze_project
+from radix.report import display_txt
+from radix.handlers.registry import HandlerRegistry
+from .utils import MockScanner
+
+import io
 
 # Setup paths
 TEST_DATA_DIR = Path(__file__).parent / "snapshots"
@@ -15,27 +19,32 @@ def get_test_pairs():
     pairs = []
     for snapshot_file in TEST_DATA_DIR.glob("*" + SNAPSHOT_SUFFIX):
         # Matches 'python_ex1.py' with 'python_ex1.py.snapshot'
-        source_file = TEST_DATA_DIR / snapshot_file[:-len(SNAPSHOT_SUFFIX)]
+        source_file = TEST_DATA_DIR / str(snapshot_file)[:-len(SNAPSHOT_SUFFIX)]
         if source_file.exists():
             pairs.append((source_file, snapshot_file))
     return pairs
 
 @pytest.mark.parametrize("source_path, expected_path", get_test_pairs())
-def test_deep_header_generation(source_path, expected_path):
+def test_report_generation(source_path, expected_path):
     source_code = source_path.read_bytes()
-    expected_output = expected_path.read_text().strip()
+    expected_output = expected_path.read_text()
+
+    virtual_path = source_path.name
+    handler = HandlerRegistry().get_handler_class(source_path.suffix)
     
-    handler = HandlerRegistry.get_handler_for_ext(source_path.suffix)
-    
-    # 3. Process: Source -> Normalized Symbols
-    # We pass the 'project/filename' part as the virtual path for the header
-    virtual_path = f"project/{source_path.name}"
-    report = handler.get_report(virtual_path, source_code)
-    
-    # 4. Render: Symbols -> Deep-Header String
-    # Note: Using Tier 3 to verify the ---:: calls are working
-    engine = ViewEngine()
-    actual_output = engine.render_deep_header(report, tier=3).strip()
-    
-    # 5. Assert (using strip to ignore trailing newlines)
-    assert actual_output == expected_output, f"Snapshot comparison failed for {source_path.name}"
+    scanner = MockScanner([
+        (
+            virtual_path,
+            virtual_path,
+            handler,
+            lambda: source_code
+        )
+    ])
+
+    test_output = io.StringIO()
+    reports_by_file = analyze_project(scanner)
+    display_txt(reports_by_file, test_output)
+    result = test_output.getvalue()
+
+    print('from', reports_by_file, 'expected output', expected_output, 'actual', result)
+    assert expected_output == result, f"Snapshot comparison failed for {source_path.name}"

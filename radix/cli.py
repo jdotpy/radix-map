@@ -2,13 +2,14 @@ from . import core
 from . import report
 from .handlers.registry import HandlerRegistry
 
+import sys
 import importlib.util
 
+
 def cli_map(args):
-    reports_by_file = core.analyze_project(args.path, calls=args.calls, params=args.params)
-    report.display_txt(reports_by_file)
-
-
+    scanner = core.default_scanner(args.path)
+    reports_by_file = core.analyze_project(scanner, calls=args.calls, params=args.params)
+    report.display_txt(reports_by_file, sys.stdout)
 
 def cli_registry(args):
     print('Supported languages:')

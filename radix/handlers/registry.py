@@ -37,9 +37,9 @@ class HandlerRegistry:
     def __init__(self):
         # Maps extension -> A function that returns the Class
         self._loaders = {
-            ".py": LIBRARIES['py']['loader'],
-            ".go": LIBRARIES['go']['loader'],
-            ".js": LIBRARIES['js']['loader'],
+            ".py": self.LIBRARIES['py']['loader'],
+            ".go": self.LIBRARIES['go']['loader'],
+            ".js": self.LIBRARIES['js']['loader'],
         }
         self._handlers: Dict[str, Type[SourceFile]] = {}
         self._errors = {}

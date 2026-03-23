@@ -1,6 +1,7 @@
-project/processor.py
--class DataProcessor:
---def __init__(source: str): ...
---def process(): ...
---def _validate(): ...
--def global_helper(): ...
+[1m#python_ex1.py[0m
+├── ƒ global_helper()
+└── ○ class DataProcessor
+    ├── ƒ __init__(self, source: str)
+    ├── ƒ process(self)
+    └── ƒ _validate(self)
+

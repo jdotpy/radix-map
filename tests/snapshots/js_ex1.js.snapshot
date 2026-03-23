@@ -1,4 +1,6 @@
-project/math.js
--def calculateTotal(price, tax): ...
----::applyDiscount()
--def applyDiscount(p): ...
+[1m#js_ex1.js[0m
+├── ƒ anonymousExpress(a, b)
+├── ƒ applyDiscount(p)
+├── ƒ calculateTotal(price, tax)
+└── ƒ foobar()
+

@@ -1,3 +1,5 @@
-project/user.go
--struct User:
---def GetName(): ...
+[1m#go_ex1.go[0m
+├── ƒ internalHelper()
+└── ○ struct User
+    └── ƒ GetName()
+
