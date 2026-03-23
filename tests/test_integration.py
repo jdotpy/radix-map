@@ -45,6 +45,4 @@ def test_report_generation(source_path, expected_path):
     reports_by_file = analyze_project(scanner)
     display_txt(reports_by_file, test_output)
     result = test_output.getvalue()
-
-    print('from', reports_by_file, 'expected output', expected_output, 'actual', result)
     assert expected_output == result, f"Snapshot comparison failed for {source_path.name}"
