@@ -1,8 +1,10 @@
 def as_sorted_dict(d):
     return dict(sorted(d.items()))
 
-
-
+def get_line_display(entity):
+    if not hasattr(entity, 'line_count'):
+        return ''
+    return f' :{entity.starting_line} | {entity.line_count} lines'
 
 def display_txt(reports_by_file, output):
     for file_path, report in as_sorted_dict(reports_by_file).items():
@@ -19,7 +21,7 @@ def display_txt(reports_by_file, output):
             pipe = "    " if is_last_top else "│   "
             
             if kind == 'func':
-                output.write(f"{marker}{item}\n")
+                output.write(f"{marker}{item}{get_line_display(item)}\n")
                 
                 # Render Calls (Tier 3)
                 for j, call in enumerate(sorted(item.calls)):

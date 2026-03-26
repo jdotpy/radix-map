@@ -9,9 +9,12 @@ def default_scanner(path: str):
     s = scanner.ProjectScanner(registry, path)
     return s
 
-def analyze_project(scanner, calls=False, params=False):
+def default_source(path):
+    return scanner.DiskSource(path)
+
+def analyze_project(scanner, source, calls=False, params=False):
     reports = {}
-    for file_path, relative_path, handler, read_func in scanner.scan():
+    for file_path, relative_path, handler, read_func in scanner.scan(source):
         try:
             source_file = handler(file_path, read_func())
         except Exception as e:

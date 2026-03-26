@@ -2,6 +2,68 @@ import os
 from pathlib import Path
 from typing import Generator, Tuple, Optional, Set
 
+import zipfile
+from dataclasses import dataclass
+from typing import Callable
+
+@dataclass
+class FileEntry:
+    full_path: Path         # The logical path within the project
+    rel_path: Path
+    size: int           # For your max_bytes check
+    reader: Callable[[], bytes] # The "make_reader" logic
+
+class DiskSource:
+    def __init__(self, root_path: Path):
+        self.path = Path(root_path)
+        self.is_single_file = self.path.is_file()
+        self.root = self.path.parent if self.is_single_file else self.path
+        
+    def walk(self) -> Generator[FileEntry, None, None]:
+        if self.is_single_file:
+            yield self._make_entry(self.path)
+            return
+        
+        for root, dirs, files in os.walk(self.root):
+            dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ProjectScanner.DEFAULT_IGNORE_LIST]
+            for f in files:
+                p = Path(root) / f
+                yield FileEntry(    
+                    full_path=p,
+                    rel_path=p.relative_to(self.root),
+                    size=p.stat().st_size,
+                    reader=p.read_bytes
+                )
+
+class ZipSource:
+    def __init__(self, buffer):
+        self.zip = zipfile.ZipFile(buffer)
+
+    @classmethod
+    def from_path(cls, path):
+        # Open file is seekable
+        return cls(open(path, 'rb'))
+
+    @classmethod
+    def from_stream(cls, stream):
+        # Pipes aren't seekable, so we must read the whole thing into memory
+        # to allow ZipFile to jump to the Central Directory at the end.
+        seekable_buffer = io.BytesIO(stream.read())
+        return cls(seekable_buffer)
+
+    def walk(self) -> Generator[FileEntry, None, None]:
+        for info in self.zip.infolist():
+            if info.is_dir():
+                continue
+            
+            rel_path = Path(info.filename)
+            yield FileEntry(
+                full_path=rel_path,
+                rel_path=rel_path,
+                size=info.file_size,
+                reader=lambda name=info.filename: self.zip.read(name)
+            )
+
 
 class ProjectScanner:
     DEFAULT_IGNORE_LIST = {
@@ -16,23 +78,15 @@ class ProjectScanner:
         self.ignored_segments = self.DEFAULT_IGNORE_LIST
         if extra_ignored_dirs:
             self.ignored_segments.update(extra_ignored_dirs)
-
-    def is_visible(self, path: Path) -> bool:
-        """The core visibility logic: Ignore dots, junk, and oversized files."""
-        if not self.registry.has_handler(path.suffix):
+    
+    def is_visible(self, entry: FileEntry) -> bool:
+        if entry.size > self.max_bytes:
             return False
-
-        for part in path.parts:
-            if part.startswith(".") and part != ".": # Allow current dir '.'
-                return False
-            if part in self.ignored_segments:
-                return False
-        try:
-            if path.stat().st_size > self.max_bytes:
-                return False
-        except FileNotFoundError:
+        if not self.registry.has_handler(entry.rel_path.suffix):
             return False
-
+        for part in entry.rel_path.parts:
+            if part.startswith(".") or part in self.ignored_segments:
+                return False
         return True
 
     def make_reader(self, path):
@@ -42,36 +96,20 @@ class ProjectScanner:
             return content
         return reader
 
-    def scan(self) -> Generator[Tuple[Path, type], None, None]:
+    def scan(self, source) -> Generator[Tuple[Path, Path, type, Callable], None, None]:
         """
-        Yields (Path, HandlerClass) for every valid file found.
-        Handles both single file and directory walking.
+        Yields (Full_Path, Relative_Path, Handler, Reader)
         """
+        for entry in source.walk():
+            # Check visibility based on the relative path (to catch ignored folders)
+            if not self.is_visible(entry):
+                continue
 
-        if self.target_path.is_file():
-            if self.is_visible(self.target_path):
+            handler_class = self.registry.get_handler_class(entry.rel_path.suffix)
+            if handler_class:
                 yield (
-                    self.target_path,
-                    self.target_path.name,
-                    self.registry.get_handler_class(self.target_path.suffix),
-                    self.make_reader(self.target_path)
+                    entry.full_path,
+                    entry.rel_path,
+                    handler_class,
+                    entry.reader
                 )
-            return
-
-        for root, dirs, files in os.walk(self.target_path):
-            # Optimization: Modify 'dirs' in-place to prevent os.walk from entering ignored folders
-            dirs[:] = [d for d in dirs if not d.startswith(".") and d not in self.ignored_segments]
-
-            for file in files:
-                file_path = Path(root) / file
-                if self.is_visible(file_path):
-                    handler_class = self.registry.get_handler_class(file_path.suffix)
-                    if handler_class is None:
-                        # We recognize the file but its module is missing
-                        continue
-                    yield (
-                        file_path,
-                        file_path.relative_to(self.target_path),
-                        handler_class,
-                        self.make_reader(file_path)
-                    )

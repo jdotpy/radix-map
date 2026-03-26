@@ -4,6 +4,11 @@ except (ImportError, AttributeError):
     QueryCursor = None
     Query = None
 
+def ts_line_info(node):
+    if isinstance(node, list) and len(node) == 1:
+        node = node[0]
+    line_count = node.end_point[0] - node.start_point[0] + 1
+    return {'starting_line': node.start_point[0], 'line_count': line_count}
 
 def ts_get_captures(query, root_node):
     """

@@ -1,7 +1,7 @@
 from .base import Variable, Function, Definition, SourceFile
 from tree_sitter import Language, Parser
 import tree_sitter_javascript as tsjavascript
-from .tree_utils import ts_get_captures, one, q
+from .tree_utils import ts_get_captures, ts_line_info, one, q
 
 def get_child_by_type(node, node_type):
     for child in node.children:
@@ -97,7 +97,7 @@ class JsSourceFile(SourceFile):
                 name = self._get_text(name_node)
                 args = self._get_text(param_node).strip("()")
                 
-                f = Function(name=name, arguments=args)
+                f = Function(name=name, arguments=args, **ts_line_info(anchor_node))
                 if include_calls and anchor_node:
                     f.calls = self._extract_calls(anchor_node)
                 functions.append(f)
@@ -115,8 +115,9 @@ class JsSourceFile(SourceFile):
 
         for _, captures in ts_get_captures(query, self._tree.root_node):
             name_node = one(captures.get('name'))
+            class_node = one(captures.get('class'))
             class_name = self._get_text(name_node)
-            defn = Definition(name=class_name, kind="class")
+            defn = Definition(name=class_name, kind="class", **ts_line_info(class_node))
             
             if not include_methods:
                 definitions.append(defn)
@@ -131,7 +132,8 @@ class JsSourceFile(SourceFile):
                     
                     method = Function(
                         name=self._get_text(name_node),
-                        arguments=self._get_text(param_node).strip("()")
+                        arguments=self._get_text(param_node).strip("()"),
+                        **ts_line_info()
                     )
                     if include_calls:
                         method.calls = self._extract_calls(child)

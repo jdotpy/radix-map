@@ -1,7 +1,7 @@
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser
 from .base import SourceFile, Function, Variable, Definition
-from .tree_utils import ts_get_captures, one, q
+from .tree_utils import ts_get_captures,ts_line_info, one, q
 
 
 def extract_decorated_function(node):
@@ -39,7 +39,7 @@ class PythonSourceFile(SourceFile):
                 name = self._get_text(name_node)
                 params = self._get_text(param_node).strip("()")
                 
-                f = Function(name=name, arguments=params)
+                f = Function(name=name, arguments=params, **ts_line_info(func_node))
                 if include_calls:
                     f.calls = self._extract_calls(func_node)
                 functions.append(f)
@@ -56,10 +56,11 @@ class PythonSourceFile(SourceFile):
         definitions = []
         for _, captures in ts_get_captures(query, self._tree.root_node):
             class_name = self._get_text(captures.get('name')[0])
-            body_node = captures.get('body')[0]
+            body_node = one(captures.get('body'))
+            class_node = one(captures.get('class'))
             
             # Initialize the Definition
-            defn = Definition(name=class_name, kind="class")
+            defn = Definition(name=class_name, kind="class", **ts_line_info(class_node))
             
             if not include_methods:
                 continue
@@ -73,7 +74,7 @@ class PythonSourceFile(SourceFile):
                 if entry.type == "function_definition":
                     method_name = self._get_text(entry.child_by_field_name("name"))
                     params = self._get_text(entry.child_by_field_name("parameters")).strip("()")
-                    method = Function(name=method_name, arguments=params)
+                    method = Function(name=method_name, arguments=params, **ts_line_info(child))
                     if include_calls:
                         method.calls = self._extract_calls(entry)
                     defn.methods.append(method)

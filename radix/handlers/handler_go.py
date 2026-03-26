@@ -2,7 +2,7 @@ from .base import Definition, Function, Variable, SourceFile
 from tree_sitter import Language, Parser
 import tree_sitter_go as tsgo
 
-from .tree_utils import ts_get_captures, one, q
+from .tree_utils import ts_get_captures, ts_line_info, one, q
 
 class GoSourceFile(SourceFile):
     lang = Language(tsgo.language())
@@ -43,7 +43,7 @@ class GoSourceFile(SourceFile):
             type_body = node.named_child(0).child_by_field_name("type")
             kind = "struct" if type_body.type == "struct_type" else "interface"
             
-            defn = Definition(name=type_name, kind=kind)
+            defn = Definition(name=type_name, kind=kind, **ts_line_info(node))
             defn.methods = [m for m in all_methods if m._receiver_type == type_name]
             definitions.append(defn)
             
@@ -59,9 +59,10 @@ class GoSourceFile(SourceFile):
         
         functions = []
         for _, captures in ts_get_captures(query, self._tree.root_node):
+            func_node = captures.get('func')
             name = self._get_text(one(captures.get('name')))
             params = self._get_text(one(captures.get('params'))).strip("()")
-            functions.append(Function(name=name, arguments=params))
+            functions.append(Function(name=name, arguments=params, **ts_line_info(func_node)))
                 
         return functions
 
@@ -104,13 +105,15 @@ class GoSourceFile(SourceFile):
         
         methods = []
         for _, captures in ts_get_captures(query, self._tree.root_node):
+            method_node = one(captures.get('method'))
             name_node = one(captures.get('name'))
             recv_node = one(captures.get('recv'))
             param_node = one(captures.get('params'))
             
             func = Function(
                 name=self._get_text(name_node),
-                arguments=self._get_text(param_node).strip("()")
+                arguments=self._get_text(param_node).strip("()"),
+                **ts_line_info(method_node)
             )
             # Temporary attribute to help iter_definitions link them
             func._receiver_type = self._get_text(recv_node)
