@@ -3,7 +3,7 @@ from pathlib import Path
 from radix.core import analyze_project
 from radix.report import display_txt
 from radix.handlers.registry import HandlerRegistry
-from .utils import MockScanner
+from .utils import MockScanner, MockSource
 
 import io
 
@@ -32,7 +32,8 @@ def test_report_generation(source_path, expected_path):
     virtual_path = source_path.name
     handler = HandlerRegistry().get_handler_class(source_path.suffix)
     
-    scanner = MockScanner([
+    source = MockSource([])
+    scanner = MockScanner(None, [
         (
             virtual_path,
             virtual_path,
@@ -42,7 +43,7 @@ def test_report_generation(source_path, expected_path):
     ])
 
     test_output = io.StringIO()
-    reports_by_file = analyze_project(scanner)
+    reports_by_file = analyze_project(scanner, source)
     display_txt(reports_by_file, test_output)
     result = test_output.getvalue()
     assert result == expected_output, f"Snapshot comparison failed for {source_path.name}"

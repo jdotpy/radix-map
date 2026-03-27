@@ -71,8 +71,7 @@ class ProjectScanner:
         "dist", "build", "out", "venv", "env", "target"
     }
 
-    def __init__(self, registry, path, max_bytes: int = 200_000, extra_ignored_dirs: Optional[Set[str]] = None):
-        self.target_path = Path(path).resolve()
+    def __init__(self, registry, max_bytes: int = 200_000, extra_ignored_dirs: Optional[Set[str]] = None):
         self.registry = registry
         self.max_bytes = max_bytes
         self.ignored_segments = self.DEFAULT_IGNORE_LIST

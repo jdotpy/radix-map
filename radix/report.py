@@ -31,7 +31,7 @@ def display_txt(reports_by_file, output):
 
             elif kind == 'def':
                 # Class or Struct
-                output.write(f"{marker}○ {item}\n")
+                output.write(f"{marker}○ {item}{get_line_display(item)}\n")
                 
                 # Methods inside the definition
                 methods = item.methods
@@ -41,7 +41,7 @@ def display_txt(reports_by_file, output):
                     m_pipe = "    " if is_last_method else "│   "
                     
 
-                    output.write(f"{pipe}{m_marker}{method}\n")
+                    output.write(f"{pipe}{m_marker}{method}{get_line_display(method)}\n")
                     
                     # Calls inside methods
                     for k, call in enumerate(sorted(method.calls)):

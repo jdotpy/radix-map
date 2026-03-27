@@ -6,7 +6,7 @@ import sys
 
 def default_scanner(path: str):
     registry = HandlerRegistry()
-    s = scanner.ProjectScanner(registry, path)
+    s = scanner.ProjectScanner(registry)
     return s
 
 def default_source(path):
