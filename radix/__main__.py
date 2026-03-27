@@ -19,9 +19,8 @@ def create_parser():
 
     # Fine-grained Overrides (Your original flags)
     group = map_parser.add_argument_group("Detail Overrides")
-    group.add_argument("--params", action="store_true", help="Include function parameters")
     group.add_argument("--calls", action="store_true", help="Include internal function calls")
-    group.add_argument("--types", action="store_true", help="Include type definitions/properties")
+    group.add_argument("--lines", action="store_true", help="Include type definitions/properties")
     
     # Configuration
     map_parser.add_argument("--max-size", type=int, default=200000, 

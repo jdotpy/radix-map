@@ -12,7 +12,7 @@ def default_scanner(path: str):
 def default_source(path):
     return scanner.DiskSource(path)
 
-def analyze_project(scanner, source, calls=False, params=False):
+def analyze_project(scanner, source, calls=False, lines=False):
     reports = {}
     for file_path, relative_path, handler, read_func in scanner.scan(source):
         try:
@@ -23,6 +23,7 @@ def analyze_project(scanner, source, calls=False, params=False):
 
         file_report = {
             "path": str(file_path),
+            "lines": source_file.get_line_count(),
             "functions": list(source_file.iter_functions(include_calls=calls)),
             "definitions": list(source_file.iter_definitions(include_methods=True, include_calls=calls)),
         }

@@ -23,6 +23,10 @@ class PythonSourceFile(SourceFile):
             return ''
         return self.code[node.start_byte:node.end_byte].decode('utf-8')
 
+    def get_line_count(self):
+        """Fetch total lines in source file"""
+        return ts_line_info(self._tree.root_node)['source_lines'][1]
+
     def iter_functions(self, include_calls=False) -> list[Function]:
         query = q(self.lang, """
             (module (function_definition 

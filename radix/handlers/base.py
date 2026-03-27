@@ -20,11 +20,10 @@ class Variable:
 @dataclass
 class Function:
     name: str
+    source_lines: tuple[int, int]
     arguments: str = ""
     return_type: str = ""
     is_public: bool = False
-    starting_line: int = 0 
-    line_count: int = 0
     calls: List[str] = field(default_factory=list)
 
     def __str__(self):
@@ -38,10 +37,9 @@ class Function:
 class Definition:
     name: str
     kind: str                 # "class", "struct", "interface"
+    source_lines: tuple[int, int]
     properties: List[Variable] = field(default_factory=list)
     methods: List[Function] = field(default_factory=list)
-    starting_line: int = 0 
-    line_count: int = 0
     
 
     def __str__(self):
@@ -52,6 +50,11 @@ class SourceFile(ABC):
         self.path = path
         self.code = code
         self._tree = self._parse()
+    
+    @abstractmethod
+    def get_line_count(self):
+        """Fetch total lines in source file"""
+        pass
 
     @abstractmethod
     def _parse(self):

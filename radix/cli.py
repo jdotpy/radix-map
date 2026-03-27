@@ -9,10 +9,11 @@ import importlib.util
 def cli_map(args):
     scanner = core.default_scanner(args.path)
     source = core.default_source(args.path)
-    reports_by_file = core.analyze_project(scanner, source, calls=args.calls, params=args.params)
+    reports_by_file = core.analyze_project(scanner, source, calls=args.calls, lines=args.lines)
     report.display_txt(
         reports_by_file,
         sys.stdout,
+        lines=args.lines,
     )
 
 def cli_registry(args):

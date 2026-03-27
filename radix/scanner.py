@@ -21,7 +21,12 @@ class DiskSource:
         
     def walk(self) -> Generator[FileEntry, None, None]:
         if self.is_single_file:
-            yield self._make_entry(self.path)
+            yield FileEntry(    
+                full_path=self.path,
+                rel_path=Path(self.path.name),
+                size=self.path.stat().st_size,
+                reader=self.path.read_bytes
+            )
             return
         
         for root, dirs, files in os.walk(self.root):
