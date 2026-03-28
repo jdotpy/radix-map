@@ -1,6 +1,6 @@
-[1m#js_ex1.js[0m
-├── ƒ anonymousExpress(a, b)
-├── ƒ applyDiscount(p)
-├── ƒ calculateTotal(price, tax)
-└── ƒ foobar()
 
+# js_ex1.js
+├── ƒ calculateTotal(price, tax)
+├── ƒ applyDiscount(p)
+├── ƒ foobar()
+└── ƒ anonymousExpress(a, b)

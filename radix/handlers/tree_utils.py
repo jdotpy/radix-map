@@ -7,7 +7,7 @@ except (ImportError, AttributeError):
 def ts_line_info(node):
     if isinstance(node, list) and len(node) == 1:
         node = node[0]
-    return {'source_lines': (node.start_point[0], node.end_point[0])}
+    return {'source_lines': (node.start_point[0] + 1, node.end_point[0] + 1)}
 
 def ts_get_captures(query, root_node):
     """

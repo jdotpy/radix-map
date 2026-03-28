@@ -30,7 +30,7 @@ class Function:
         return_suffix = ''
         if self.return_type:
             return_suffix = ' ➜ {return_type}'
-        return f'ƒ {self.name}({self.arguments}){return_suffix}'
+        return f'{self.name}({self.arguments}){return_suffix}'
 
 
 @dataclass

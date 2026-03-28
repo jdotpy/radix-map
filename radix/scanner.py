@@ -1,19 +1,22 @@
 import os
+import io
+import zipfile
 from pathlib import Path
 from typing import Generator, Tuple, Optional, Set
-
-import zipfile
 from dataclasses import dataclass
 from typing import Callable
 
 @dataclass
 class FileEntry:
-    full_path: Path         # The logical path within the project
+    full_path: Path
     rel_path: Path
-    size: int           # For your max_bytes check
-    reader: Callable[[], bytes] # The "make_reader" logic
+    size: int
+    reader: Callable[[], bytes]
+    is_stream: bool = False
 
 class DiskSource:
+    requries_explicit_lang = False
+
     def __init__(self, root_path: Path):
         self.path = Path(root_path)
         self.is_single_file = self.path.is_file()
@@ -40,7 +43,26 @@ class DiskSource:
                     reader=p.read_bytes
                 )
 
+class StreamSource:
+    requries_explicit_lang = True
+
+    def __init__(self, stream, label="stdin"):
+        # We read it once because we can't seek back on a pipe
+        self.content = stream.read()
+        self.label = Path(label)
+
+    def walk(self) -> Generator[FileEntry, None, None]:
+        yield FileEntry(
+            full_path=self.label,
+            rel_path=self.label,
+            size=len(self.content),
+            reader=lambda: self.content,
+            is_stream=True,
+        )
+
 class ZipSource:
+    requries_explicit_lang = False
+    
     def __init__(self, buffer):
         self.zip = zipfile.ZipFile(buffer)
 
@@ -84,6 +106,8 @@ class ProjectScanner:
             self.ignored_segments.update(extra_ignored_dirs)
     
     def is_visible(self, entry: FileEntry) -> bool:
+        if entry.is_stream:
+            return self.registry.fallback_loader is not None
         if entry.size > self.max_bytes:
             return False
         if not self.registry.has_handler(entry.rel_path.suffix):
@@ -92,13 +116,14 @@ class ProjectScanner:
             if part.startswith(".") or part in self.ignored_segments:
                 return False
         return True
-
+    """
     def make_reader(self, path):
         def reader():
             with open(path, 'rb') as f:
                 content = f.read()
             return content
         return reader
+    """
 
     def scan(self, source) -> Generator[Tuple[Path, Path, type, Callable], None, None]:
         """
@@ -109,7 +134,12 @@ class ProjectScanner:
             if not self.is_visible(entry):
                 continue
 
-            handler_class = self.registry.get_handler_class(entry.rel_path.suffix)
+            if entry.is_stream and entry.rel_path.suffix == '':
+                extension = None # will use fallback
+            else:
+                extension = entry.rel_path.suffix
+
+            handler_class = self.registry.get_handler_class(extension)
             if handler_class:
                 yield (
                     entry.full_path,

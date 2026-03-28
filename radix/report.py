@@ -35,11 +35,12 @@ def display_txt(reports_by_file, output, lines=False):
             file_lines = get_line_range_str(size=report['lines']).ljust(max_gutter)
         else:
             file_lines = ''
-        output.write(f"\n{file_lines}\033[1m # {file_path}\033[0m\n")
+        output.write(f"\n{file_lines}# {file_path}\n")
         
-        all_top_level = ([(f, 'func') for f in sorted(report.get('functions', []), key=lambda x: x.name)] + 
-                         [(d, 'def') for d in sorted(report.get('definitions', []), key=lambda x: x.name)])
-        
+        all_top_level = ([(f, 'func') for f in report.get('functions', [])] + 
+                         [(d, 'def') for d in report.get('definitions', [])])
+        all_top_level.sort(key=lambda item: item[0].source_lines[0])
+
         for i, (item, kind) in enumerate(all_top_level):
             is_last_top = (i == len(all_top_level) - 1)
             marker = "└── " if is_last_top else "├── "
@@ -49,15 +50,15 @@ def display_txt(reports_by_file, output, lines=False):
                 line_range = get_line_range_str(item, default=gutter_spacing).ljust(max_gutter)
             
             if kind == 'func':
-                output.write(f"{line_range} {marker} {item}\n")
+                output.write(f"{line_range}{marker}ƒ {item}\n")
                 # Render Calls
                 for j, call in enumerate(sorted(item.calls)):
                     is_last_call = (j == len(item.calls) - 1)
                     c_marker = "└── ➜ " if is_last_call else "├── ➜ "
-                    output.write(f"{gutter_spacing} {pipe}{c_marker}{call}\n")
+                    output.write(f"{gutter_spacing}{pipe}{c_marker}{call}\n")
 
             elif kind == 'def':
-                output.write(f"{line_range} {marker}○ {item}\n")
+                output.write(f"{line_range}{marker}○ {item}\n")
                 # Render Methods
                 methods = item.methods
                 for j, method in enumerate(methods):
@@ -69,4 +70,4 @@ def display_txt(reports_by_file, output, lines=False):
                         m_line_range = get_line_range_str(method, default=gutter_spacing).ljust(max_gutter)
                     else:
                         m_line_range = ''
-                    output.write(f"{m_line_range} {pipe}{m_marker}{method}\n")
+                    output.write(f"{m_line_range}{pipe}{m_marker}{method}\n")

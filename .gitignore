@@ -1,5 +1,11 @@
 radix.egg-info/
+dist/
 *.pyc
 *.swp
 .env
 .venv
+
+radixcodemap.egg-info/
+
+*.zip
+*.log

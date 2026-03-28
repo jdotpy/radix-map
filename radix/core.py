@@ -4,12 +4,27 @@ from .handlers.registry import HandlerRegistry
 from pathlib import Path
 import sys
 
-def default_scanner(path: str):
-    registry = HandlerRegistry()
+def make_scanner(path: str, handler_overrides=None, fallback_handler=None):
+    registry = HandlerRegistry(overrides=handler_overrides, fallback=fallback_handler)
     s = scanner.ProjectScanner(registry)
     return s
 
-def default_source(path):
+def get_source(path):
+    if path == "-":
+        # Check if stdin is a ZIP or plain text
+        # Zip files start with "PK" (0x50 0x4B)
+        stream = sys.stdin.buffer
+        head = stream.peek(2)[:2]
+        
+        if head == b"PK":
+            return scanner.ZipSource.from_stream(stream)
+        else:
+            return scanner.StreamSource(stream) # Your new SingleFileStream
+            
+    p = Path(path)
+    if p.suffix.lower() == ".zip":
+        return scanner.ZipSource.from_path(path)
+        
     return scanner.DiskSource(path)
 
 def analyze_project(scanner, source, calls=False, lines=False):

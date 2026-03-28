@@ -1,7 +1,7 @@
-[1m#python_ex1.py[0m
-├── ƒ global_helper()
-└── ○ class DataProcessor
-    ├── ƒ __init__(self, source: str)
-    ├── ƒ process(self)
-    └── ƒ _validate(self)
 
+# python_ex1.py
+├── ○ class DataProcessor
+│   ├── __init__(self, source: str)
+│   ├── process(self)
+│   └── _validate(self)
+└── ƒ global_helper()
