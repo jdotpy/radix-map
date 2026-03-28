@@ -19,10 +19,11 @@ def create_parser():
 
     # Fine-grained Overrides (Your original flags)
     group = map_parser.add_argument_group("Detail Overrides")
-    group.add_argument("--calls", action="store_true", help="Include internal function calls")
     group.add_argument("--lang", action="append", help="Force language for incoming file (used for stdin). Can also pass file extensions mappings .pyx:py will cause .pyx files to parse as py files")
     group.add_argument("--lines", action="store_true", help="Show line ranges [<start_line>:<end_line>]")
-    
+    group.add_argument("--color", action="store_true", help="Colorize text")
+
+
     # Configuration
     map_parser.add_argument("--max-size", type=int, default=200000, 
                             help="Skip files larger than this size in bytes")

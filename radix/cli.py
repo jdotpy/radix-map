@@ -31,11 +31,15 @@ def cli_map(args):
         print("Use `--lang py` or similar to tell us what to parse")
         sys.exit(1)
 
-    reports_by_file = core.analyze_project(scanner, source, calls=args.calls, lines=args.lines)
+    reports_by_file = core.analyze_project(scanner, source, lines=args.lines)
+
+    use_color = args.color or (sys.stdout.isatty() and args.color is not False)
+    theme = report.Theme(use_color=use_color)
     report.display_txt(
         reports_by_file,
         sys.stdout,
         lines=args.lines,
+        theme=theme,
     )
 
 def cli_registry(args):

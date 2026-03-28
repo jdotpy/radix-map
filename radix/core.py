@@ -39,8 +39,8 @@ def analyze_project(scanner, source, calls=False, lines=False):
         file_report = {
             "path": str(file_path),
             "lines": source_file.get_line_count(),
-            "functions": list(source_file.iter_functions(include_calls=calls)),
-            "definitions": list(source_file.iter_definitions(include_methods=True, include_calls=calls)),
+            "functions": list(source_file.iter_functions(include_calls=False)),
+            "definitions": list(source_file.iter_definitions(include_methods=True, include_calls=False)),
         }
         reports[relative_path] = file_report
     return reports
