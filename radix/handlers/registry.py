@@ -1,6 +1,7 @@
 from typing import Dict, Callable, Type
 from .base import SourceFile
 
+
 import sys
 
 def _load_python():
@@ -14,6 +15,10 @@ def _load_go():
 def _load_js():
     from .handler_js import JsSourceFile
     return JsSourceFile
+
+def load_md():
+    from .handler_md import MarkdownSourceFile
+    return MarkdownSourceFile
 
 class HandlerRegistry:
     LIBRARIES = {
@@ -32,6 +37,11 @@ class HandlerRegistry:
                 'lib': 'tree_sitter_javascript',
                 'loader': _load_js,
             },
+            "md": {
+                'package_name': '<included>',
+                'lib': None,
+                'loader': load_md,
+            },
     }
 
     def __init__(self, overrides=None, fallback=None):
@@ -40,6 +50,7 @@ class HandlerRegistry:
             ".py": self.LIBRARIES['py']['loader'],
             ".go": self.LIBRARIES['go']['loader'],
             ".js": self.LIBRARIES['js']['loader'],
+            ".md": self.LIBRARIES['md']['loader'],
         }
         self._handlers: Dict[str, Type[SourceFile]] = {}
         self._errors = {}
