@@ -1,5 +1,5 @@
 
 # go_ex1.go
 ├── ○ struct User
-│   └── GetName()
+│   └── ƒ GetName()
 └── ƒ internalHelper()
