@@ -1,7 +1,5 @@
-from . import core
 from . import cli
 import argparse
-import sys
 
 def create_parser():
     parser = argparse.ArgumentParser(prog="radix", description="Codebase Mapping Tool")

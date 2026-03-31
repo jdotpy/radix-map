@@ -27,7 +27,7 @@ class PythonSourceFile(SourceFile):
         """Fetch total lines in source file"""
         return ts_line_info(self._tree.root_node)['source_lines'][1]
 
-    def iter_functions(self, include_calls=False) -> list[Function]:
+    def iter_functions(self, include_calls=False):
         query = q(self.lang, """
             (module (function_definition 
                 name: (identifier) @name
@@ -86,4 +86,4 @@ class PythonSourceFile(SourceFile):
         return definitions
       
     def iter_globals(self):
-        raise NotImplemented()
+        raise NotImplementedError()

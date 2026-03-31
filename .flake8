@@ -1,0 +1,5 @@
+[flake8]
+select = F821, F831, E999
+
+# Still exclude folders so it doesn't scan your library dependencies
+exclude = .git, __pycache__, venv, .env

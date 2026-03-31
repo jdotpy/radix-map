@@ -1,4 +1,4 @@
-from .base import SourceFile, Definition
+from .base import SourceFile, Definition, Variable, Function
 
 class MarkdownSourceFile(SourceFile):
     def _parse(self):

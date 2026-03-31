@@ -1,4 +1,4 @@
-from typing import Dict, Callable, Type
+from typing import Dict, Type, Any
 from .base import SourceFile
 
 
@@ -46,7 +46,7 @@ class HandlerRegistry:
 
     def __init__(self, overrides=None, fallback=None):
         # Maps extension -> A function that returns the Class
-        self._loaders = {
+        self._loaders : dict[str | None, Any] = {
             ".py": self.LIBRARIES['py']['loader'],
             ".go": self.LIBRARIES['go']['loader'],
             ".js": self.LIBRARIES['js']['loader'],
@@ -69,7 +69,7 @@ class HandlerRegistry:
             self.fallback_loader = self._loaders.get(f'.{fallback}', None)
             self._loaders[None] = self.fallback_loader
 
-    def get_handler_class(self, extension: str) -> Type[SourceFile]:
+    def get_handler_class(self, extension: str):
         if extension is not None:
             extension = extension.lower()
 
