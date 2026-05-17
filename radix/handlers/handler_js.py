@@ -1,4 +1,4 @@
-from .base import Variable, Function, Definition, SourceFile
+from .base import Function, Definition, SourceFile
 from tree_sitter import Language, Parser
 import tree_sitter_javascript as tsjavascript
 from .tree_utils import ts_get_captures, ts_line_info, one, q
@@ -137,7 +137,7 @@ class JsSourceFile(SourceFile):
                     method = Function(
                         name=self._get_text(name_node),
                         arguments=self._get_text(param_node).strip("()"),
-                        **ts_line_info()
+                        **ts_line_info(child)
                     )
                     if include_calls:
                         method.calls = self._extract_calls(child)
