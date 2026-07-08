@@ -119,6 +119,6 @@ class ScalaSourceFile(SourceFile):
             name_node = captures.get('name')
             name = self._get_text(one(captures.get('name')))
             if name:
-                variables.append(name)
+                variables.append(Variable(name=name))
         
         return variables
