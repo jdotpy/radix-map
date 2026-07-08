@@ -120,7 +120,6 @@ def clitool_main():
                     print(f"❌ Failed to generate snapshot for {source_path.name}:\n{err}")
                     sys.exit(1)
 
-        # 6. Summary Evaluation
         if updated_count == 0:
             print(f"❌ Error: No local snapshot source files found matching target names: {', '.join(targets)}")
             sys.exit(1)
