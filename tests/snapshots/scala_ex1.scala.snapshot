@@ -1,0 +1,7 @@
+
+# scala_ex1.scala
+├── ○ class DataProcessor
+├── ○ object Router
+├── ○ trait Endpoint
+├── ○ trait ComplexSignatures
+└── ƒ packageLevelUtility(input: Int)

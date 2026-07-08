@@ -1,0 +1,13 @@
+
+# js_ex2.js
+├── ○ class OrderManager
+│   ├── ƒ constructor(id)
+│   ├── ƒ calculateFinalPrice(basePrice, taxRate)
+│   └── ƒ syncRemoteInventory(itemCode)
+├── ○ class InternalLogger
+│   └── ƒ log(msg)
+├── ƒ connect(connectionString)
+├── ƒ disconnect(force)
+├── ƒ executeQuery(sql, params)
+├── ƒ globalUtilityService(inputCode, flags)
+└── ƒ formatCurrency(amount, symbol = '$')

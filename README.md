@@ -56,8 +56,9 @@ Example output:
 | Language | Status | Package Requirement |
 |---|---|---|
 | Python	| ✅ functions & classes | tree-sitter-python | 
-| Go	| 🚧 | tree-sitter-go | 
+| Go	| ✅ | tree-sitter-go | 
 | JavaScript | 🚧 | tree-sitter-javascript | 
+| Scala | ✅ | tree-sitter-scala | 
 
 ```
 

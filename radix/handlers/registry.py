@@ -20,6 +20,10 @@ def load_md():
     from .handler_md import MarkdownSourceFile
     return MarkdownSourceFile
 
+def _load_scala():
+    from .handler_scala import ScalaSourceFile
+    return ScalaSourceFile
+
 class HandlerRegistry:
     LIBRARIES = {
             "py": {
@@ -37,6 +41,11 @@ class HandlerRegistry:
                 'lib': 'tree_sitter_javascript',
                 'loader': _load_js,
             },
+            "scala": {
+                'package_name': 'tree-sitter-scala',
+                'lib': 'tree_sitter_scala',
+                'loader': _load_scala,
+            },
             "md": {
                 'package_name': '<included>',
                 'lib': None,
@@ -51,6 +60,7 @@ class HandlerRegistry:
             ".go": self.LIBRARIES['go']['loader'],
             ".js": self.LIBRARIES['js']['loader'],
             ".md": self.LIBRARIES['md']['loader'],
+            ".scala": self.LIBRARIES['scala']['loader'],
         }
         self._handlers: Dict[str, Type[SourceFile]] = {}
         self._errors = {}
